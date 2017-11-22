@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ContosoUniversity.Data;
 using ContosoUniversity.Models;
+using ContosoUniversity.Models.SchoolViewModels;
 
 namespace ContosoUniversity.Controllers
 {
@@ -22,7 +23,14 @@ namespace ContosoUniversity.Controllers
         // GET: Instructors
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Instructors.ToListAsync());
+            var instructors = _context.Instructors
+                .Include(i => i.CourseAssignments)
+                    .ThenInclude(c => c.Course)
+                    .AsNoTracking()
+                .Include(i => i.OfficeAssignment)
+                    .AsNoTracking();
+
+            return View(await instructors.ToListAsync());
         }
 
         // GET: Instructors/Details/5

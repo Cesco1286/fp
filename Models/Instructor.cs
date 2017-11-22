@@ -32,7 +32,9 @@ namespace ContosoUniversity.Models
             get { return LastName + ", " + FirstMidName; }
         }
 
+        [Display(Name = "Courses")]
         public ICollection<CourseAssignment> CourseAssignments { get; set; }
+        [Display(Name = "Office")]
         public OfficeAssignment OfficeAssignment { get; set; }
     }
 }
