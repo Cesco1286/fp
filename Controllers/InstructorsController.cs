@@ -21,16 +21,49 @@ namespace ContosoUniversity.Controllers
         }
 
         // GET: Instructors
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? id, int? courseID)
         {
-            var instructors = _context.Instructors
+            ViewData["IdNotFoundMessage"] = "Id not found";
+            
+            var viewModel = new InstructorIndexData();
+            viewModel.Instructors = await _context.Instructors
                 .Include(i => i.CourseAssignments)
                     .ThenInclude(c => c.Course)
-                    .AsNoTracking()
+                        .ThenInclude( c => c.Enrollments)
+                            .ThenInclude(e => e.Student)
                 .Include(i => i.OfficeAssignment)
-                    .AsNoTracking();
+                .Include(i => i.CourseAssignments)
+                    .ThenInclude(c => c.Course)
+                        .ThenInclude(c => c.Department)
+                .AsNoTracking()
+                .OrderBy(i => i.LastName)
+                .ToListAsync();
 
-            return View(await instructors.ToListAsync());
+            if (id != null) {
+                ViewData["IdFound"] = true;
+                try
+                {
+                    {
+                        ViewData["InstructorID"] = id.Value;
+                        Instructor instructor = viewModel.Instructors
+                            .Where(i => i.ID == id).Single();
+                        viewModel.Courses = instructor.CourseAssignments.Select(c => c.Course);
+                    }
+                }
+                catch (Exception)
+                {
+                    System.Console.WriteLine("id not found");
+                    ViewData["IdFound"] = false;
+                }
+            }
+
+            if (courseID != null)
+            {
+                ViewData["CourseID"] = courseID.Value;
+                viewModel.Enrollments = viewModel.Courses.Where(
+                    x => x.CourseID == courseID).Single().Enrollments;
+            }
+            return View(viewModel);
         }
 
         // GET: Instructors/Details/5
